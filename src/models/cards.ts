@@ -1,11 +1,10 @@
-import { ObjectId } from "bson";
 import mongoose from "mongoose";
 
 type TCard = {
   name: string;
   link: string;
-  owner: ObjectId;
-  likes: ObjectId[];
+  owner: mongoose.Schema.Types.ObjectId; // почему-то просто ObjectId не работает даже и импортом
+  likes: mongoose.Schema.Types.ObjectId[];
   createdAt: Date
 }
 
@@ -21,17 +20,17 @@ const cardSchema = new mongoose.Schema<TCard>({
     required: true,
   },
   owner: {
-    type: ObjectId,
+    type: mongoose.Schema.Types.ObjectId,
     required: true,
   },
   likes: [{
-    type: ObjectId,
+    type: mongoose.Schema.Types.ObjectId,
     default: []
   }],
-  createdAt: [{
+  createdAt: {
     type: Date,
-    default: []
-  }],
+    default: Date.now
+  },
 })
 
 
