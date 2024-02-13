@@ -5,7 +5,7 @@ import { ERROR_CODE_DEFAULT, ERROR_CODE_NOT_FOUND, ERROR_CODE_BAD_REQUEST } from
 export const getUsers = async (req: Request, res: Response) => {
     return User.find({})
         .then(user => res.send({data: user}))
-        .catch((err) => res.status(ERROR_CODE_BAD_REQUEST).send({message: 'Данные не верны'}))
+        .catch(() => res.status(ERROR_CODE_BAD_REQUEST).send({message: 'Данные не верны'}))
 }
 
 export const getUserId = async (req: Request, res: Response) => {

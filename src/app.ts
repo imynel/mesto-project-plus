@@ -23,7 +23,7 @@ app.use(express.json());
 
 app.use((req: Request, res: Response, next: NextFunction ) => {
   req.user = {
-    id: '65c9e97ff3fc1570919efcc3' // вставьте сюда _id созданного в предыдущем пункте пользователя
+    id: '65cb53183c3015c0139a2335' // вставьте сюда _id созданного в предыдущем пункте пользователя
   };
 
   next();
