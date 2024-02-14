@@ -2,6 +2,8 @@ import express, { Request, Response, NextFunction  } from 'express'
 import mongoose from 'mongoose';
 import routesUser from './routes/user'
 import routesCard from './routes/card'
+import auth from './middlewares/auth'
+import { createUser, login } from './controllers/user';
 
 declare global {
   namespace Express {
@@ -21,16 +23,13 @@ mongoose.connect('mongodb://127.0.0.1:27017/mestodb');
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
-app.use((req: Request, res: Response, next: NextFunction ) => {
-  req.user = {
-    id: '65cb53183c3015c0139a2335' // вставьте сюда _id созданного в предыдущем пункте пользователя
-  };
+app.post('/signin', login)
+app.post('/signup', createUser)
 
-  next();
-});
-
+app.use(auth)// когда будет роут логин вставить auth
 app.use('/users', routesUser);
 app.use('/cards', routesCard)
+
 
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   res.send({ message: err.message });

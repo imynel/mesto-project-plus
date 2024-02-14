@@ -1,12 +1,12 @@
 import { Router } from "express";
-import { getUsers, getUserId, postUser, patchUser, patchUserAvatar } from '../controllers/user'
+import { getUsers, getUserId, patchUser, patchUserAvatar, getUserMe } from '../controllers/user'
 
 
 const router = Router()
 
 router.get('/', getUsers)
+router.get('/me', getUserMe)
 router.get('/:userId', getUserId)
-router.post('/', postUser)
 router.patch('/me', patchUser)
 router.patch('/me/avatar', patchUserAvatar)
 
