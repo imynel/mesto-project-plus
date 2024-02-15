@@ -17,24 +17,27 @@ interface UserModel extends Model<TUser> {
 const userSchema = new mongoose.Schema<TUser, UserModel>({
     name: {
         type: String,
-        required: true,
-        minlength: 2,
-        maxlength: 30,
+        minlength: [2, 'Минимальная длина поля "name" - 2'],
+        maxlength: [30, 'Максимальная длина поля "name" - 30'],
         default: 'Жак-Ив Кусто',
     },
     about: {
         type: String,
-        minlength: 2,
-        maxlength: 200,
+        minlength: [2, 'Минимальная длина поля "about" - 2'],
+        maxlength: [200, 'Максимальная длина поля "about" - 200'],
         default: 'Исследователь',
     },
     avatar: {
         type: String,
         default: 'https://pictures.s3.yandex.net/resources/jacques-cousteau_1604399756.png',
+        validate: {
+          validator: (v: string) => validator.isURL(v),
+          message: 'Некорректный URL',
+        }
     },
     email: {
         type: String,
-        required: true,
+        required: [true, 'Поле "email" должно быть заполнено'],
         unique: true,
         lowercase: true,
         validate: {
@@ -44,9 +47,9 @@ const userSchema = new mongoose.Schema<TUser, UserModel>({
     },
     password: {
         type: String,
-        required: true,
+        required: [true, 'Поле "password" должно быть заполнено'],
     }
-})
+}, { versionKey: false })
 
 userSchema.static('findUserByCredentials', function findUserByCredentials(email: string, password: string) {
     return this.findOne({ email })

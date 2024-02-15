@@ -3,6 +3,7 @@ import { Request, Response } from "express";
 import bcrypt from 'bcryptjs'
 import { ERROR_CODE_DEFAULT, ERROR_CODE_NOT_FOUND, ERROR_CODE_BAD_REQUEST } from '../utils/constants'
 import jwt from 'jsonwebtoken'
+import { IUserRequest } from "types/types";
 
 export const getUsers = async (req: Request, res: Response) => {
     return User.find({})
@@ -25,18 +26,18 @@ export const createUser = async (req: Request, res: Response) => {
     const { name, about, avatar, email, password } = req.body
     return bcrypt.hash(password, 10)
         .then((hash: string) => User.create({name, about, avatar, email, password: hash})
-            .then((user) => res.send({data: user}))
+            .then((user) => res.status(201).send({data: user}))
             .catch(err => {
-                if(err.name === 'InternalServerError') return res.status(ERROR_CODE_DEFAULT).send({message: 'С сервером что-то не так'})
-                else return res.status(ERROR_CODE_BAD_REQUEST).send({message: 'Данные не валидны'})
+              if (err.name === 'ValidationError') return res.status(ERROR_CODE_BAD_REQUEST).send({message: 'Данные не валидны'})
+              else return res.status(ERROR_CODE_DEFAULT).send({message: 'С сервером что-то не так'})
             }))
 }
 
-export const patchUser = async (req: Request, res: Response) => {
+export const patchUser = async (req: IUserRequest, res: Response) => {
   const { name, about } = req.body
-  const id = req.user?.id
+  const _id = req.user?._id
 
-  return User.findByIdAndUpdate(id, { name, about })
+  return User.findByIdAndUpdate(_id, { name, about })
     .then(user => res.send({ data: user }))
     .catch(err => {
       if(err.name === 'InternalServerError') return res.status(ERROR_CODE_DEFAULT).send({message: 'С сервером что-то не так'})
@@ -46,11 +47,11 @@ export const patchUser = async (req: Request, res: Response) => {
 
 }
 
-export const patchUserAvatar = async (req: Request, res: Response) => {
+export const patchUserAvatar = async (req: IUserRequest, res: Response) => {
   const { avatar } = req.body
-  const id = req.user?.id
+  const _id = req.user?._id
 
-  return User.findByIdAndUpdate(id, { avatar })
+  return User.findByIdAndUpdate(_id, { avatar })
     .then(user => res.send({ data: user }))
     .catch(err => {
       if(err.name === 'InternalServerError') return res.status(ERROR_CODE_DEFAULT).send({message: 'С сервером что-то не так'})
@@ -63,10 +64,10 @@ export const login = async (req: Request, res: Response) => {
     const { email, password } = req.body
 
     return User.findUserByCredentials(email, password)
-        .then((user: any) => {
-           
-            res.send({ 
-                token:  jwt.sign({id: user.id}, 'super-strong-secret', { expiresIn: '7d' })
+        .then((user) => {
+
+            res.send({
+                token:  jwt.sign({_id: user._id}, 'super-strong-secret', { expiresIn: '7d' })
             })
         })
         .catch((err) => {
@@ -74,9 +75,9 @@ export const login = async (req: Request, res: Response) => {
           });
 }
 
-export const getUserMe = async (req: Request, res: Response) => {
-  const id = req.user?.id
-  return User.findOne({ id })
+export const getUserMe = async (req: IUserRequest, res: Response) => {
+  const _id = req.user?._id
+  return User.findOne({ _id })
     .then(user => res.send({data: user}))
     .catch(() => res.status(ERROR_CODE_BAD_REQUEST).send({message: 'Данные не верны'}))
 }
