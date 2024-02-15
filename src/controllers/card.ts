@@ -17,6 +17,7 @@ export const postCard = async (req: IUserRequest, res: Response) => {
         .catch(err => {
           if(err.name === 'InternalServerError') return res.status(ERROR_CODE_DEFAULT).send({message: 'С сервером что-то не так'})
           else if(err.name === 'ValidationError') return res.status(ERROR_CODE_BAD_REQUEST).send({message: 'Данные не валидны'})
+          else if(err.name === 'CastError')  res.status(ERROR_CODE_BAD_REQUEST).send({ message: 'Передан некорректный _id' });
           else return res.status(ERROR_CODE_NOT_FOUND).send({message: 'Пользователь не найден'})
         })
 }
@@ -42,6 +43,7 @@ export const putCardLike = async (req: IUserRequest, res: Response) => {
       .then(() => res.send({ message: "Вы поставили лайк"}))
       .catch(err => {
         if(err.name === 'InternalServerError') return res.status(ERROR_CODE_DEFAULT).send({message: 'С сервером что-то не так'})
+        else if(err.name === 'CastError')  res.status(ERROR_CODE_BAD_REQUEST).send({ message: 'Передан некорректный _id' });
         else return res.status(ERROR_CODE_NOT_FOUND).send({message: 'Пользователь не найден'})
       })
 }
@@ -57,6 +59,7 @@ export const deleteCardLike = async (req: IUserRequest, res: Response) => {
       .then(() => res.send({ message: "Вы удалили лайк"}))
       .catch(err => {
         if(err.name === 'InternalServerError') return res.status(ERROR_CODE_DEFAULT).send({message: 'С сервером что-то не так'})
+        else if(err.name === 'CastError')  res.status(ERROR_CODE_BAD_REQUEST).send({ message: 'Передан некорректный _id' });
         else return res.status(ERROR_CODE_NOT_FOUND).send({message: 'Пользователь не найден'})
       })
 }

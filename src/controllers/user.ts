@@ -17,6 +17,7 @@ export const getUserId = async (req: Request, res: Response) => {
         .then(user => res.send({data: user}))
         .catch((err) => {
           if(err.name === 'InternalServerError') return res.status(ERROR_CODE_DEFAULT).send({message: 'С сервером что-то не так'})
+          else if(err.name === 'CastError')  res.status(ERROR_CODE_BAD_REQUEST).send({ message: 'Передан некорректный _id' });
           else return res.status(ERROR_CODE_BAD_REQUEST).send({message: 'Пользователь не найден'})
         })
 
@@ -37,11 +38,12 @@ export const patchUser = async (req: IUserRequest, res: Response) => {
   const { name, about } = req.body
   const _id = req.user?._id
 
-  return User.findByIdAndUpdate(_id, { name, about })
+  return User.findByIdAndUpdate(_id, { name, about }, { new: true, runValidators: true })
     .then(user => res.send({ data: user }))
     .catch(err => {
       if(err.name === 'InternalServerError') return res.status(ERROR_CODE_DEFAULT).send({message: 'С сервером что-то не так'})
       else if(err.name === 'ValidationError') return res.status(ERROR_CODE_BAD_REQUEST).send({message: 'Данные не валидны'})
+      else if(err.name === 'CastError')  res.status(ERROR_CODE_BAD_REQUEST).send({ message: 'Передан некорректный _id' });
       else return res.status(ERROR_CODE_NOT_FOUND).send({message: 'Пользователь не найден'})
     })
 
@@ -51,11 +53,12 @@ export const patchUserAvatar = async (req: IUserRequest, res: Response) => {
   const { avatar } = req.body
   const _id = req.user?._id
 
-  return User.findByIdAndUpdate(_id, { avatar })
+  return User.findByIdAndUpdate(_id, { avatar }, { new: true, runValidators: true })
     .then(user => res.send({ data: user }))
     .catch(err => {
       if(err.name === 'InternalServerError') return res.status(ERROR_CODE_DEFAULT).send({message: 'С сервером что-то не так'})
       else if(err.name === 'ValidationError') return res.status(ERROR_CODE_BAD_REQUEST).send({message: 'Данные не валидны'})
+      else if(err.name === 'CastError')  res.status(ERROR_CODE_BAD_REQUEST).send({ message: 'Передан некорректный _id' });
       else return res.status(ERROR_CODE_NOT_FOUND).send({message: 'Пользователь не найден'})
     });
 }
