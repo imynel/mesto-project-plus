@@ -6,6 +6,7 @@ import auth from './middlewares/auth'
 import { createUser, login } from './controllers/user';
 import helmet from 'helmet';
 import { ERROR_CODE_NOT_FOUND } from './utils/constants';
+import { errors } from 'celebrate';
 
 
 const { PORT = 3000 } = process.env
@@ -28,6 +29,8 @@ app.use('/cards', routesCard)
 app.use('*', (req: Request, res: Response) => {
   res.status(ERROR_CODE_NOT_FOUND).send({ message: 'Запрашиваемый ресурс не найден' });
 })
+
+app.use(errors());
 
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   const { statusCode = 500, message } = err
