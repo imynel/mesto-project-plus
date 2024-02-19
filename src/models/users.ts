@@ -48,6 +48,7 @@ const userSchema = new mongoose.Schema<TUser, UserModel>({
     password: {
         type: String,
         required: [true, 'Поле "password" должно быть заполнено'],
+        select: false,
     }
 }, { versionKey: false })
 

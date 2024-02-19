@@ -86,7 +86,7 @@ export const login = async (req: Request, res: Response) => {
 
 export const getUserMe = async (req: IUserRequest, res: Response) => {
   const _id = req.user?._id
-  return User.findOne({ _id })
+  return User.findOne({ _id }).select('+password')
     .then(user => res.send({data: user}))
     .catch((err) => {
       if(err.name === 'ValidationError') return res.status(ERROR_CODE_BAD_REQUEST).send({message: 'Данные не верны'})

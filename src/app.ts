@@ -7,6 +7,7 @@ import { createUser, login } from './controllers/user';
 import helmet from 'helmet';
 import { ERROR_CODE_NOT_FOUND } from './utils/constants';
 import { errors } from 'celebrate';
+import { errorLogger, requestLogger } from './middlewares/logger';
 
 
 const { PORT = 3000 } = process.env
@@ -19,6 +20,8 @@ app.use(helmet()); // защита приложения
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
+app.use(requestLogger)
+
 app.post('/signin', login)
 app.post('/signup', createUser)
 
@@ -29,6 +32,8 @@ app.use('/cards', routesCard)
 app.use('*', (req: Request, res: Response) => {
   res.status(ERROR_CODE_NOT_FOUND).send({ message: 'Запрашиваемый ресурс не найден' });
 })
+
+app.use(errorLogger)
 
 app.use(errors());
 
