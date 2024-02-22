@@ -1,42 +1,43 @@
 import User from "../models/users";
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import bcrypt from 'bcryptjs'
 import { ERROR_CODE_DEFAULT, ERROR_CODE_NOT_FOUND, ERROR_CODE_BAD_REQUEST } from '../utils/constants'
 import jwt from 'jsonwebtoken'
 import { IUserRequest } from "types/types";
 
-export const getUsers = async (req: Request, res: Response) => {
+export const getUsers = async (req: Request, res: Response, next: NextFunction) => {
     return User.find({})
         .then(user => res.send({data: user}))
-        .catch(() => res.status(ERROR_CODE_BAD_REQUEST).send({message: 'Данные не верны'}))
+        .catch(next)
 }
 
-export const getUserId = async (req: Request, res: Response) => {
+export const getUserId = async (req: Request, res: Response, next: NextFunction) => {
     const { userId } = req.params
     return User.findById(userId)
         .then(user => {
           if(user) return res.send({data: user})
           else return res.status(ERROR_CODE_BAD_REQUEST).send({message: 'Пользователь не найден'})
         })
-        .catch((err) => {
-          if(err.name === 'CastError') return res.status(ERROR_CODE_BAD_REQUEST).send({ message: 'Передан некорректный _id' });
-          else return res.status(ERROR_CODE_DEFAULT).send({message: 'С сервером что-то не так'})
-        })
+        .catch(next)
 
 }
 
-export const createUser = async (req: Request, res: Response) => {
+export const createUser = async (req: Request, res: Response, next: NextFunction) => {
     const { name, about, avatar, email, password } = req.body
     return bcrypt.hash(password, 10)
         .then((hash: string) => User.create({name, about, avatar, email, password: hash})
             .then((user) => res.status(201).send({data: user}))
             .catch(err => {
-              if (err.name === 'ValidationError') return res.status(ERROR_CODE_BAD_REQUEST).send({message: 'Данные не валидны'})
-              else return res.status(ERROR_CODE_DEFAULT).send({message: 'С сервером что-то не так'})
+              if (err.code === 11000) {
+                next((new Error('Пользователь с таким email уже существует')));
+              } else {
+                next(err);
+              }
+        
             }))
 }
 
-export const patchUser = async (req: IUserRequest, res: Response) => {
+export const patchUser = async (req: IUserRequest, res: Response, next: NextFunction) => {
   const { name, about } = req.body
   const _id = req.user?._id
 
@@ -45,15 +46,11 @@ export const patchUser = async (req: IUserRequest, res: Response) => {
       if(user) return res.send({ data: user })
       else return res.status(ERROR_CODE_NOT_FOUND).send({message: 'Пользователь не найден'})
     })
-    .catch(err => {
-      if(err.name === 'ValidationError') return res.status(ERROR_CODE_BAD_REQUEST).send({message: 'Данные не валидны'})
-      else if(err.name === 'CastError')  res.status(ERROR_CODE_BAD_REQUEST).send({ message: 'Передан некорректный _id' });
-      else return res.status(ERROR_CODE_DEFAULT).send({message: 'С сервером что-то не так'})
-    })
+    .catch(next)
 
 }
 
-export const patchUserAvatar = async (req: IUserRequest, res: Response) => {
+export const patchUserAvatar = async (req: IUserRequest, res: Response, next: NextFunction) => {
   const { avatar } = req.body
   const _id = req.user?._id
 
@@ -62,11 +59,7 @@ export const patchUserAvatar = async (req: IUserRequest, res: Response) => {
       if(user) return res.send({ data: user })
       else return res.status(ERROR_CODE_NOT_FOUND).send({message: 'Пользователь не найден'})
     })
-    .catch(err => {
-      if(err.name === 'ValidationError') return res.status(ERROR_CODE_BAD_REQUEST).send({message: 'Данные не валидны'})
-      else if(err.name === 'CastError')  res.status(ERROR_CODE_BAD_REQUEST).send({ message: 'Передан некорректный _id' });
-      else return res.status(ERROR_CODE_DEFAULT).send({message: 'С сервером что-то не так'})
-    });
+    .catch(next);
 }
 
 export const login = async (req: Request, res: Response) => {
@@ -84,12 +77,9 @@ export const login = async (req: Request, res: Response) => {
           });
 }
 
-export const getUserMe = async (req: IUserRequest, res: Response) => {
+export const getUserMe = async (req: IUserRequest, res: Response, next: NextFunction) => {
   const _id = req.user?._id
   return User.findOne({ _id }).select('+password')
     .then(user => res.send({data: user}))
-    .catch((err) => {
-      if(err.name === 'ValidationError') return res.status(ERROR_CODE_BAD_REQUEST).send({message: 'Данные не верны'})
-      else return res.status(ERROR_CODE_DEFAULT).send({message: 'С сервером что-то не так'})
-    } )
+    .catch(next)
 }

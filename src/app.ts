@@ -8,6 +8,7 @@ import helmet from 'helmet';
 import { ERROR_CODE_NOT_FOUND } from './utils/constants';
 import { errors } from 'celebrate';
 import { errorLogger, requestLogger } from './middlewares/logger';
+import errorsMidlleware from './middlewares/errors'
 
 
 const { PORT = 3000 } = process.env
@@ -25,7 +26,7 @@ app.use(requestLogger)
 app.post('/signin', login)
 app.post('/signup', createUser)
 
-app.use(auth)// когда будет роут логин вставить auth
+app.use(auth)
 app.use('/users', routesUser);
 app.use('/cards', routesCard)
 
@@ -37,17 +38,7 @@ app.use(errorLogger)
 
 app.use(errors());
 
-app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-  const { statusCode = 500, message } = err
-
-  res
-    .status(statusCode)
-    .send({
-      message: statusCode === 500
-        ? 'На сервере произошла ошибка'
-        : message
-    })
-});
+app.use(errorsMidlleware)
 
 app.listen(PORT, () => {
   console.log(`подключены к ${PORT} порту`)

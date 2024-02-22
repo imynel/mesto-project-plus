@@ -1,15 +1,15 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import Card from '../models/cards'
 import { ERROR_CODE_BAD_REQUEST, ERROR_CODE_DEFAULT, ERROR_CODE_NOT_FOUND } from "../utils/constants"
 import { IUserRequest } from "types/types";
 
-export const getCards = async (req: Request, res: Response) => {
+export const getCards = async (req: Request, res: Response, next: NextFunction) => {
     return Card.find({})
         .then(card => res.send({data: card}))
-        .catch(() => res.status(ERROR_CODE_BAD_REQUEST).send({message: 'Данные не верны'}))
+        .catch(next)
 }
 
-export const postCard = async (req: IUserRequest, res: Response) => {
+export const postCard = async (req: IUserRequest, res: Response, next: NextFunction) => {
     const _id = req.user?._id;
     const { name, link } = req.body
     return Card.create({ name, link, owner: _id })
@@ -17,27 +17,26 @@ export const postCard = async (req: IUserRequest, res: Response) => {
           if(card) return res.status(201).send({data: card})
           else return res.status(ERROR_CODE_NOT_FOUND).send({message: 'Карточка не найдена'})
         })
-        .catch(err => {
-          if(err.name === 'ValidationError') return res.status(ERROR_CODE_BAD_REQUEST).send({message: 'Данные не валидны'})
-          else if(err.name === 'CastError')  res.status(ERROR_CODE_BAD_REQUEST).send({ message: 'Передан некорректный _id' });
-          else return res.status(ERROR_CODE_DEFAULT).send({message: 'С сервером что-то не так'})
-        })
+        .catch(next)
 }
 
-export const deleteCard = async (req: Request, res: Response) => {
+export const deleteCard = async (req: IUserRequest, res: Response, next: NextFunction) => {
     const { cardId } = req.params
-    return Card.findByIdAndRemove(cardId)
+    const owner = req.user?._id;
+    return Card.findById(cardId)
         .then(card => {
-          if(card) return res.send({data: card})
-          else return res.status(ERROR_CODE_NOT_FOUND).send({message: 'Карточка не найдена'})
+          if(!card) return res.status(ERROR_CODE_NOT_FOUND).send({message: 'Карточка не найдена'})
+          
+          if (card.owner.toString() === owner) {
+            Card.deleteOne(card._id);
+          } else {
+            return res.status(ERROR_CODE_NOT_FOUND).send({message: 'Вы можете удалять только свои карточки'});
+          }
         })
-        .catch(err => {
-          if(err.name === 'CastError')  res.status(ERROR_CODE_BAD_REQUEST).send({ message: 'Передан некорректный _id' });
-          else return res.status(ERROR_CODE_DEFAULT).send({message: 'С сервером что-то не так'})
-        })
+        .catch(next)
 }
 
-export const putCardLike = async (req: IUserRequest, res: Response) => {
+export const putCardLike = async (req: IUserRequest, res: Response, next: NextFunction) => {
   const _id = req.user?._id;
   const { cardId } = req.params
   return Card.findByIdAndUpdate(
@@ -49,13 +48,10 @@ export const putCardLike = async (req: IUserRequest, res: Response) => {
       if(card) return res.send({data: card})
       else return res.status(ERROR_CODE_NOT_FOUND).send({message: 'Карточка не найдена'})
     })
-    .catch(err => {
-      if(err.name === 'CastError')  res.status(ERROR_CODE_BAD_REQUEST).send({ message: 'Передан некорректный _id' });
-      else return res.status(ERROR_CODE_DEFAULT).send({message: 'С сервером что-то не так'})
-    })
+    .catch(next)
 }
 
-export const deleteCardLike = async (req: IUserRequest, res: Response) => {
+export const deleteCardLike = async (req: IUserRequest, res: Response, next: NextFunction) => {
   const _id = req.user?._id;
   const { cardId } = req.params
   return Card.findByIdAndUpdate(
@@ -67,10 +63,7 @@ export const deleteCardLike = async (req: IUserRequest, res: Response) => {
       if(card) return res.send({data: card})
       else return res.status(ERROR_CODE_NOT_FOUND).send({message: 'Карточка не найдена'})
     })
-    .catch(err => {
-      if(err.name === 'CastError')  res.status(ERROR_CODE_BAD_REQUEST).send({ message: 'Передан некорректный _id' });
-      else return res.status(ERROR_CODE_DEFAULT).send({message: 'С сервером что-то не так'})
-    })
+    .catch(next)
 }
 
 
