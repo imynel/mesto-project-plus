@@ -1,6 +1,7 @@
 import mongoose, { Model, Document } from 'mongoose';
 import validator from 'validator'
 import bcrypt from 'bcryptjs'
+import UnauthorizedError from '../utils/errors/unauthorizedError';
 
 type TUser = {
     name: string;
@@ -53,13 +54,13 @@ const userSchema = new mongoose.Schema<TUser, UserModel>({
 }, { versionKey: false })
 
 userSchema.static('findUserByCredentials', function findUserByCredentials(email: string, password: string) {
-    return this.findOne({ email })
+    return this.findOne({ email }).select('+password')
         .then((user) => {
-            if(!user) return Promise.reject(new Error('Неправильные почта или пароль'))
+            if(!user) throw new UnauthorizedError('Неправильные почта или пароль');
 
             return bcrypt.compare(password, user.password)
                 .then((matched) => {
-                    if(!matched) return Promise.reject(new Error('Неправильные почта или пароль'))
+                    if(!matched) throw new UnauthorizedError('Неправильные почта или пароль');
                     return user
                 })
         })

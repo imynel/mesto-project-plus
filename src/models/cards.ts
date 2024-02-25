@@ -27,12 +27,12 @@ const cardSchema = new mongoose.Schema<TCard>({
   owner: {
     type: mongoose.Schema.Types.ObjectId,
     required: true,
-    ref: 'User'
+    ref: 'user'
   },
   likes: [{
     type: mongoose.Schema.Types.ObjectId,
     default: [],
-    ref: 'User'
+    ref: 'user'
   }],
   createdAt: {
     type: Date,

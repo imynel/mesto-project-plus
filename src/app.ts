@@ -5,10 +5,11 @@ import routesCard from './routes/card'
 import auth from './middlewares/auth'
 import { createUser, login } from './controllers/user';
 import helmet from 'helmet';
-import { ERROR_CODE_NOT_FOUND } from './utils/constants';
-import { errors } from 'celebrate';
+import { ERROR_CODE_NOT_FOUND, urlValidator } from './utils/constants';
+import { Joi, celebrate, errors } from 'celebrate';
 import { errorLogger, requestLogger } from './middlewares/logger';
 import errorsMidlleware from './middlewares/errors'
+import NotFoundError from './utils/errors/notFoundError';
 
 
 const { PORT = 3000 } = process.env
@@ -27,12 +28,24 @@ app.post('/signin', login)
 app.post('/signup', createUser)
 
 app.use(auth)
-app.use('/users', routesUser);
-app.use('/cards', routesCard)
+app.use('/users', celebrate({
+  body: Joi.object().keys({
+    email: Joi.string().required().email(),
+    password: Joi.string().required().min(8),
+  }),
+}), routesUser);
 
-app.use('*', (req: Request, res: Response) => {
-  res.status(ERROR_CODE_NOT_FOUND).send({ message: 'Запрашиваемый ресурс не найден' });
-})
+app.use('/cards', celebrate({
+  body: Joi.object().keys({
+    name: Joi.string().min(2).max(30),
+    about: Joi.string().min(2).max(30),
+    email: Joi.string().required().email(),
+    password: Joi.string().required().min(8),
+    avatar: Joi.string().custom(urlValidator),
+  }),
+}), routesCard)
+
+app.use('*', (req: Request, res: Response, next: NextFunction) => next(new NotFoundError('Запрашиваемый ресурс не найден')));
 
 app.use(errorLogger)
 

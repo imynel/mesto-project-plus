@@ -3,7 +3,8 @@ import { NextFunction, Request, Response } from "express";
 import bcrypt from 'bcryptjs'
 import { ERROR_CODE_DEFAULT, ERROR_CODE_NOT_FOUND, ERROR_CODE_BAD_REQUEST } from '../utils/constants'
 import jwt from 'jsonwebtoken'
-import { IUserRequest } from "types/types";
+import { IUserRequest } from "../types/types";
+import NotFoundError from "../utils/errors/notFoundError";
 
 export const getUsers = async (req: Request, res: Response, next: NextFunction) => {
     return User.find({})
@@ -15,8 +16,8 @@ export const getUserId = async (req: Request, res: Response, next: NextFunction)
     const { userId } = req.params
     return User.findById(userId)
         .then(user => {
-          if(user) return res.send({data: user})
-          else return res.status(ERROR_CODE_BAD_REQUEST).send({message: 'Пользователь не найден'})
+          if(!user) throw new NotFoundError('Пользователя с таким ID не найден');
+          res.send({ data: user })
         })
         .catch(next)
 
@@ -33,7 +34,7 @@ export const createUser = async (req: Request, res: Response, next: NextFunction
               } else {
                 next(err);
               }
-        
+
             }))
 }
 
@@ -44,7 +45,7 @@ export const patchUser = async (req: IUserRequest, res: Response, next: NextFunc
   return User.findByIdAndUpdate(_id, { name, about }, { new: true, runValidators: true })
     .then(user => {
       if(user) return res.send({ data: user })
-      else return res.status(ERROR_CODE_NOT_FOUND).send({message: 'Пользователь не найден'})
+      else throw new NotFoundError('Пользователя с таким ID не найден');
     })
     .catch(next)
 
@@ -57,7 +58,7 @@ export const patchUserAvatar = async (req: IUserRequest, res: Response, next: Ne
   return User.findByIdAndUpdate(_id, { avatar }, { new: true, runValidators: true })
     .then(user => {
       if(user) return res.send({ data: user })
-      else return res.status(ERROR_CODE_NOT_FOUND).send({message: 'Пользователь не найден'})
+      else throw new NotFoundError('Пользователя с таким ID не найден');
     })
     .catch(next);
 }
@@ -79,7 +80,7 @@ export const login = async (req: Request, res: Response) => {
 
 export const getUserMe = async (req: IUserRequest, res: Response, next: NextFunction) => {
   const _id = req.user?._id
-  return User.findOne({ _id }).select('+password')
+  return User.findOne({ _id })
     .then(user => res.send({data: user}))
     .catch(next)
 }

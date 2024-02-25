@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import { IUserRequest } from "types/types";
+import UnauthorizedError from "../utils/errors/unauthorizedError";
 
 interface MyJwtPayload extends JwtPayload {
     _id: string;
@@ -9,7 +10,7 @@ interface MyJwtPayload extends JwtPayload {
 export default (req: IUserRequest, res: Response, next: NextFunction) => {
     const { authorization } = req.headers
 
-    if (!authorization || !authorization.startsWith('Bearer ')) return res.status(401).send({message: 'Необходима авторизация'})
+    if (!authorization || !authorization.startsWith('Bearer ')) throw new UnauthorizedError('Необходима авторизация');
 
     const token = authorization.replace('Bearer ', '')
 
@@ -18,7 +19,7 @@ export default (req: IUserRequest, res: Response, next: NextFunction) => {
     try {
         payload = jwt.verify(token, 'super-strong-secret') as MyJwtPayload
     } catch (err) {
-        return res.status(401).send({ message: "Ошибка авторизации" })
+      throw new UnauthorizedError('Необходима авторизация');
     }
 
     req.user = payload
