@@ -5,6 +5,7 @@ import { ERROR_CODE_DEFAULT, ERROR_CODE_NOT_FOUND, ERROR_CODE_BAD_REQUEST } from
 import jwt from 'jsonwebtoken'
 import { IUserRequest } from "../types/types";
 import NotFoundError from "../utils/errors/notFoundError";
+import ConflictError from "../utils/errors/conflictError";
 
 export const getUsers = async (req: Request, res: Response, next: NextFunction) => {
     return User.find({})
@@ -30,7 +31,7 @@ export const createUser = async (req: Request, res: Response, next: NextFunction
             .then((user) => res.status(201).send({data: user}))
             .catch(err => {
               if (err.code === 11000) {
-                next((new Error('Пользователь с таким email уже существует')));
+                next((new ConflictError('Пользователь с таким email уже существует')));
               } else {
                 next(err);
               }
@@ -63,7 +64,7 @@ export const patchUserAvatar = async (req: IUserRequest, res: Response, next: Ne
     .catch(next);
 }
 
-export const login = async (req: Request, res: Response) => {
+export const login = async (req: Request, res: Response, next: NextFunction) => {
     const { email, password } = req.body
 
     return User.findUserByCredentials(email, password)
@@ -73,9 +74,7 @@ export const login = async (req: Request, res: Response) => {
                 token:  jwt.sign({_id: user._id}, 'super-strong-secret', { expiresIn: '7d' })
             })
         })
-        .catch((err) => {
-            res.status(401).send({ message: err.message });
-          });
+        .catch(next)
 }
 
 export const getUserMe = async (req: IUserRequest, res: Response, next: NextFunction) => {

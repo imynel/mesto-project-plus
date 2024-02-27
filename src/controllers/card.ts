@@ -3,6 +3,7 @@ import Card from '../models/cards'
 import { ERROR_CODE_BAD_REQUEST, ERROR_CODE_DEFAULT, ERROR_CODE_NOT_FOUND } from "../utils/constants"
 import { IUserRequest } from "types/types";
 import NotFoundError from "../utils/errors/notFoundError";
+import ForbiddenError from "../utils/errors/forbiddenError";
 
 export const getCards = async (req: Request, res: Response, next: NextFunction) => {
     return Card.find({})
@@ -15,7 +16,7 @@ export const postCard = async (req: IUserRequest, res: Response, next: NextFunct
     const { name, link } = req.body
     return Card.create({ name, link, owner: _id })
         .then(card => {
-          if(card) return res.status(201).send({data: card})
+          if(card) return res.status(201).send({message: 'Карточка успешно создана'})
           else return res.status(ERROR_CODE_NOT_FOUND).send({message: 'Карточка не найдена'})
         })
         .catch(next)
@@ -26,12 +27,12 @@ export const deleteCard = async (req: IUserRequest, res: Response, next: NextFun
     const owner = req.user?._id;
     return Card.findById(cardId)
         .then((card) => {
-          if(!card) return res.status(ERROR_CODE_NOT_FOUND).send({message: 'Карточка не найдена'})
+          if(!card) throw new NotFoundError('Карточка не найдена');
 
           if (card.owner.toString() === owner) {
             return Card.deleteOne(card._id)
               .then(() => res.send({message: "Карточка удалена"}))
-          } else return res.status(ERROR_CODE_NOT_FOUND).send({message: 'Вы можете удалять только свои карточки'});
+          } else throw new ForbiddenError('Вы можете удалять только свои карточки')
         })
         .catch(next)
 }

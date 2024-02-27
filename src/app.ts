@@ -24,18 +24,7 @@ app.use(express.json());
 
 app.use(requestLogger)
 
-app.post('/signin', login)
-app.post('/signup', createUser)
-
-app.use(auth)
-app.use('/users', celebrate({
-  body: Joi.object().keys({
-    email: Joi.string().required().email(),
-    password: Joi.string().required().min(8),
-  }),
-}), routesUser);
-
-app.use('/cards', celebrate({
+app.post('/signin', celebrate({
   body: Joi.object().keys({
     name: Joi.string().min(2).max(30),
     about: Joi.string().min(2).max(30),
@@ -43,7 +32,19 @@ app.use('/cards', celebrate({
     password: Joi.string().required().min(8),
     avatar: Joi.string().custom(urlValidator),
   }),
-}), routesCard)
+}), login)
+
+app.post('/signup', celebrate({
+  body: Joi.object().keys({
+    email: Joi.string().required().email(),
+    password: Joi.string().required().min(8),
+  }),
+}), createUser)
+
+app.use(auth)
+app.use('/users', routesUser);
+
+app.use('/cards', routesCard)
 
 app.use('*', (req: Request, res: Response, next: NextFunction) => next(new NotFoundError('Запрашиваемый ресурс не найден')));
 
