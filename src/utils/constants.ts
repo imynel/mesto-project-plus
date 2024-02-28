@@ -5,7 +5,8 @@ export const ERROR_CODE_NOT_FOUND = 404
 export const ERROR_CODE_DEFAULT = 500
 export const ERROR_CODE_UNAUTHORIZED = 401
 export const ERROR_FORBIDDEN = 403
-export const CONFLICT_ERROR = 409;
+export const CONFLICT_ERROR = 409
+export const CREATED_CODE = 201
 
 export const urlValidator = (value: string, helpers: Joi.CustomHelpers<any>) => {
     if (!/^https?:\/\/(?:www\.)?[a-zA-Z0-9\-._~:/?#[\]@!$&'()*+,;=]*#?$/.test(value)) {
